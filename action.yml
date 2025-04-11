@@ -1,6 +1,6 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
+name: diff
+description: bash like diff in javascript
+author: Thibault Croisier
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
@@ -9,15 +9,17 @@ branding:
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
+  new_file:
+    description: The new file to diff
     required: true
-    default: '1000'
+  old_file:
+    description: The old file used for the diff
+    required: true
 
 # Define your outputs here.
 outputs:
-  time:
-    description: Your output description here
+  diff:
+    description: The diff result
 
 runs:
   using: node20

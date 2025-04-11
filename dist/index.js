@@ -27246,43 +27246,41 @@ function requireCore () {
 
 var coreExports = requireCore();
 
-/**
- * Waits for a number of milliseconds.
- *
- * @param {number} milliseconds The number of milliseconds to wait.
- * @returns {Promise<string>} Resolves with 'done!' after the wait is over.
- */
-async function wait(milliseconds) {
-  return new Promise((resolve) => {
-    if (isNaN(milliseconds)) throw new Error('milliseconds is not a number')
-
-    setTimeout(() => resolve('done!'), milliseconds);
-  })
-}
-
-/**
- * The main function for the action.
- *
- * @returns {Promise<void>} Resolves when the action is complete.
- */
 async function run() {
   try {
-    const ms = coreExports.getInput('milliseconds');
-
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    coreExports.debug(`Waiting ${ms} milliseconds ...`);
-
-    // Log the current timestamp, wait, then log the new timestamp
-    coreExports.debug(new Date().toTimeString());
-    await wait(parseInt(ms, 10));
-    coreExports.debug(new Date().toTimeString());
-
-    // Set outputs for other workflow steps to use
-    coreExports.setOutput('time', new Date().toTimeString());
+    const newFile = coreExports.getInput('new_file');
+    const oldFile = coreExports.getInput('old_file');
+    diff(newFile, oldFile);
   } catch (error) {
-    // Fail the workflow run if an error occurs
     if (error instanceof Error) coreExports.setFailed(error.message);
   }
+}
+
+function diff(newFile, oldFile) {
+  const newFileArray = newFile.split('\n');
+  const oldFileArray = oldFile.split('\n');
+
+  let oldFileIndex;
+  let diffNewFile = '';
+  let diffOldFile = '';
+
+  newFileArray.forEach((element, index) => {
+    if (element !== oldFileArray[index]) {
+      if (index >= oldFileArray.length) {
+        diffNewFile += '<==' + element + '\n';
+      } else {
+        diffNewFile += '<==' + element + '\n';
+        diffOldFile += '==>' + oldFileArray[index] + '\n';
+      }
+      oldFileIndex = index;
+    }
+  });
+  while (oldFileIndex++ < oldFileArray.length - 1) {
+    diffOldFile += '==>' + oldFileArray[oldFileIndex] + '\n';
+  }
+  console.log(diffNewFile.substring(0, diffNewFile.length - 1));
+  console.log('--------');
+  console.log(diffOldFile.substring(0, diffOldFile.length - 1));
 }
 
 /**
