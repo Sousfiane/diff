@@ -1,62 +1,46 @@
-/**
- * Unit tests for the action's main functionality, src/main.js
- *
- * To mock dependencies in ESM, you can create fixtures that export mock
- * functions and objects. For example, the core module is mocked in this test,
- * so that the actual '@actions/core' module is not imported.
- */
 import { jest } from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
-import { wait } from '../__fixtures__/wait.js'
 
-// Mocks should be declared before the module being tested is imported.
+// Mock core module
 jest.unstable_mockModule('@actions/core', () => core)
-jest.unstable_mockModule('../src/wait.js', () => ({ wait }))
 
-// The module being tested should be imported dynamically. This ensures that the
-// mocks are used in place of any actual dependencies.
+// Dynamically import the module to ensure mocks are applied
 const { run } = await import('../src/main.js')
 
-describe('main.js', () => {
+describe('run', () => {
   beforeEach(() => {
-    // Set the action's inputs as return values from core.getInput().
-    core.getInput.mockImplementation(() => '500')
-
-    // Mock the wait function so that it does not actually wait.
-    wait.mockImplementation(() => Promise.resolve('done!'))
-  })
-
-  afterEach(() => {
     jest.resetAllMocks()
   })
 
-  it('Sets the time output', async () => {
+  it('logs the correct diff when new and old files differ', async () => {
+    const oldFile = `line1\nline2\nline3`
+    const newFile = `line1\nchanged line2\nline3\nline4`
+
+    core.getInput.mockImplementation((name) => {
+      if (name === 'old_file') return oldFile
+      if (name === 'new_file') return newFile
+    })
+
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+
     await run()
 
-    // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenNthCalledWith(
-      1,
-      'time',
-      // Simple regex to match a time string in the format HH:MM:SS.
-      expect.stringMatching(/^\d{2}:\d{2}:\d{2}/)
-    )
+    expect(logSpy).toHaveBeenNthCalledWith(1, '<==changed line2\n<==line4')
+    expect(logSpy).toHaveBeenNthCalledWith(2, '--------')
+    expect(logSpy).toHaveBeenNthCalledWith(3, '==>line2')
   })
 
-  it('Sets a failed status', async () => {
-    // Clear the getInput mock and return an invalid value.
-    core.getInput.mockClear().mockReturnValueOnce('this is not a number')
-
-    // Clear the wait mock and return a rejected promise.
-    wait
-      .mockClear()
-      .mockRejectedValueOnce(new Error('milliseconds is not a number'))
+  it('calls core.setFailed when error is thrown', async () => {
+    // Simulate an invalid input causing `.split('\n')` to throw
+    core.getInput.mockImplementation((name) => {
+      if (name === 'old_file') return null // this will throw
+      if (name === 'new_file') return 'line1\nline2'
+    })
 
     await run()
 
-    // Verify that the action was marked as failed.
-    expect(core.setFailed).toHaveBeenNthCalledWith(
-      1,
-      'milliseconds is not a number'
+    expect(core.setFailed).toHaveBeenCalledWith(
+      expect.stringContaining('Cannot read properties of null')
     )
   })
 })
