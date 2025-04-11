@@ -2,6 +2,11 @@ name: diff
 description: bash like diff in javascript
 author: Thibault Croisier
 
+# Add your action's branding here. This will appear on the GitHub Marketplace.
+branding:
+  icon: heart
+  color: red
+
 # Define your inputs here.
 inputs:
   new_file:
