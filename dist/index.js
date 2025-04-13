@@ -27261,8 +27261,13 @@ async function run() {
 }
 
 function diff(newFile, oldFile) {
-  const newFileArray = newFile.split('\n');
-  const oldFileArray = oldFile.split('\n');
+  const normalizeLineEndings = (str) =>
+    str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const removeNonPrintableChars = (str) =>
+    str.replace(/[^\x20-\x7E]/g, '').trim();
+
+  const newFileArray = normalizeLineEndings(newFile).split('\n');
+  const oldFileArray = normalizeLineEndings(oldFile).split('\n');
 
   let diffNewFile = [];
   let diffOldFile = [];
@@ -27270,8 +27275,8 @@ function diff(newFile, oldFile) {
   const maxLength = Math.max(newFileArray.length, oldFileArray.length);
 
   for (let index = 0; index < maxLength; index++) {
-    const newLine = newFileArray[index] || '';
-    const oldLine = oldFileArray[index] || '';
+    const newLine = removeNonPrintableChars(newFileArray[index] || '');
+    const oldLine = removeNonPrintableChars(oldFileArray[index] || '');
 
     if (newLine !== oldLine) {
       if (newLine) diffNewFile.push('<==' + newLine);
