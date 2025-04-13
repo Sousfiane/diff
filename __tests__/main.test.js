@@ -16,9 +16,10 @@ describe('run', () => {
     const oldFile = `line1\nline2\nline3`
     const newFile = `line1\nchanged line2\nline3\nline4`
 
+    // Mock base64-encoded input
     core.getInput.mockImplementation((name) => {
-      if (name === 'old_file') return oldFile
-      if (name === 'new_file') return newFile
+      if (name === 'old_file') return Buffer.from(oldFile).toString('base64')
+      if (name === 'new_file') return Buffer.from(newFile).toString('base64')
     })
 
     const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
@@ -31,16 +32,16 @@ describe('run', () => {
   })
 
   it('calls core.setFailed when error is thrown', async () => {
-    // Simulate an invalid input causing `.split('\n')` to throw
+    // Simulate error during getInput
     core.getInput.mockImplementation((name) => {
-      if (name === 'old_file') return null // this will throw
-      if (name === 'new_file') return 'line1\nline2'
+      if (name === 'old_file') throw new Error('Simulated failure')
+      return Buffer.from('line1\nline2').toString('base64')
     })
 
     await run()
 
     expect(core.setFailed).toHaveBeenCalledWith(
-      expect.stringContaining('Cannot read properties of null')
+      expect.stringContaining('Simulated failure')
     )
   })
 })

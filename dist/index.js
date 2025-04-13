@@ -27248,9 +27248,13 @@ var coreExports = requireCore();
 
 async function run() {
   try {
-    const newFile = coreExports.getInput('new_file');
-    const oldFile = coreExports.getInput('old_file');
-    diff(newFile, oldFile);
+    const oldFileB64 = coreExports.getInput('old_file');
+    const newFileB64 = coreExports.getInput('new_file');
+
+    const oldFileContent = Buffer.from(oldFileB64, 'base64').toString('utf-8');
+    const newFileContent = Buffer.from(newFileB64, 'base64').toString('utf-8');
+
+    diff(newFileContent, oldFileContent);
   } catch (error) {
     if (error instanceof Error) coreExports.setFailed(error.message);
   }
@@ -27260,27 +27264,29 @@ function diff(newFile, oldFile) {
   const newFileArray = newFile.split('\n');
   const oldFileArray = oldFile.split('\n');
 
-  let oldFileIndex;
-  let diffNewFile = '';
-  let diffOldFile = '';
+  let diffNewFile = [];
+  let diffOldFile = [];
 
-  newFileArray.forEach((element, index) => {
-    if (element !== oldFileArray[index]) {
-      if (index >= oldFileArray.length) {
-        diffNewFile += '<==' + element + '\n';
-      } else {
-        diffNewFile += '<==' + element + '\n';
-        diffOldFile += '==>' + oldFileArray[index] + '\n';
-      }
-      oldFileIndex = index;
+  const maxLength = Math.max(newFileArray.length, oldFileArray.length);
+
+  for (let index = 0; index < maxLength; index++) {
+    const newLine = newFileArray[index] || '';
+    const oldLine = oldFileArray[index] || '';
+
+    if (newLine !== oldLine) {
+      if (newLine) diffNewFile.push('<==' + newLine);
+      if (oldLine) diffOldFile.push('==>' + oldLine);
     }
-  });
-  while (oldFileIndex++ < oldFileArray.length - 1) {
-    diffOldFile += '==>' + oldFileArray[oldFileIndex] + '\n';
   }
-  console.log(diffNewFile.substring(0, diffNewFile.length - 1));
+
+  // Join the differences into strings and print
+  if (diffNewFile.length > 0) {
+    console.log(diffNewFile.join('\n'));
+  }
   console.log('--------');
-  console.log(diffOldFile.substring(0, diffOldFile.length - 1));
+  if (diffOldFile.length > 0) {
+    console.log(diffOldFile.join('\n'));
+  }
 }
 
 /**
