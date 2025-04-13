@@ -2,9 +2,16 @@ import * as core from '@actions/core'
 
 export async function run() {
   try {
-    const newFile = core.getInput('new_file')
-    const oldFile = core.getInput('old_file')
-    diff(newFile, oldFile)
+    const oldFileB64 = core.getInput('old_file')
+    const newFileB64 = core.getInput('new_file')
+
+    const oldFileContent = Buffer.from(oldFileB64, 'base64').toString('utf-8')
+    const newFileContent = Buffer.from(newFileB64, 'base64').toString('utf-8')
+
+    console.log('Old file content:\n', oldFileContent)
+    console.log('New file content:\n', newFileContent)
+
+    diff(newFileContent, oldFileContent)
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
