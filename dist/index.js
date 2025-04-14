@@ -27,7 +27,7 @@ import require$$6 from 'string_decoder';
 import require$$0$9 from 'diagnostics_channel';
 import require$$2$2 from 'child_process';
 import require$$6$1 from 'timers';
-import fs from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -27255,13 +27255,13 @@ async function run() {
     const oldFileContent = Buffer.from(oldFileB64, 'base64').toString('utf-8');
     const newFileContent = Buffer.from(newFileB64, 'base64').toString('utf-8');
 
-    diff(newFileContent, oldFileContent);
+    await diff(newFileContent, oldFileContent);
   } catch (error) {
     if (error instanceof Error) coreExports.setFailed(error.message);
   }
 }
 
-function diff(newFile, oldFile) {
+async function diff(newFile, oldFile) {
   const normalizeLineEndings = (str) =>
     str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const removeNonPrintableChars = (str) =>
@@ -27292,18 +27292,25 @@ function diff(newFile, oldFile) {
     console.log(diffNewFile.join('\n'));
     diffContent += diffNewFile.join('\n');
   }
+
   console.log('--------');
   diffContent += '\n--------\n';
+
   if (diffOldFile.length > 0) {
     console.log(diffOldFile.join('\n'));
     diffContent += diffOldFile.join('\n');
   }
-  writeLogFile(diffContent);
+
+  await writeLogFile(diffContent);
 }
 
-function writeLogFile(content) {
-  fs.writeFile('./diff.log', content);
-  if (fs.existsSync('./diff.log')) console.log('Diff log successfully created');
+async function writeLogFile(content) {
+  try {
+    await writeFile('./diff.log', content);
+    console.log('Diff log successfully created');
+  } catch (err) {
+    console.error('Failed to write diff log:', err);
+  }
 }
 
 /**
