@@ -1,6 +1,6 @@
-# Create a JavaScript Action
+# Diff
 
-A JavaScript Diff github action that print the diff between two files and create
+A JavaScript Diff GitHub Action that print the diff between two files and create
 a Diff log in the project root.
 
 ## Usage
