@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import fs from 'node:fs'
 
 export async function run() {
   try {
@@ -38,12 +39,23 @@ function diff(newFile, oldFile) {
     }
   }
 
+  let diffContent = ''
+
   // Join the differences into strings and print
   if (diffNewFile.length > 0) {
     console.log(diffNewFile.join('\n'))
+    diffContent += diffNewFile.join('\n')
   }
   console.log('--------')
+  diffContent += '\n--------\n'
   if (diffOldFile.length > 0) {
     console.log(diffOldFile.join('\n'))
+    diffContent += diffOldFile.join('\n')
   }
+  writeLogFile(diffContent)
+}
+
+function writeLogFile(content) {
+  fs.writeFile('./diff.log', content)
+  if (fs.existsSync('./diff.log')) console.log('Diff log successfully created')
 }

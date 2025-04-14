@@ -27,6 +27,7 @@ import require$$6 from 'string_decoder';
 import require$$0$9 from 'diagnostics_channel';
 import require$$2$2 from 'child_process';
 import require$$6$1 from 'timers';
+import fs from 'node:fs';
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -27284,14 +27285,25 @@ function diff(newFile, oldFile) {
     }
   }
 
+  let diffContent = '';
+
   // Join the differences into strings and print
   if (diffNewFile.length > 0) {
     console.log(diffNewFile.join('\n'));
+    diffContent += diffNewFile.join('\n');
   }
   console.log('--------');
+  diffContent += '\n--------\n';
   if (diffOldFile.length > 0) {
     console.log(diffOldFile.join('\n'));
+    diffContent += diffOldFile.join('\n');
   }
+  writeLogFile(diffContent);
+}
+
+function writeLogFile(content) {
+  fs.writeFile('./diff.log', content);
+  if (fs.existsSync('./diff.log')) console.log('Diff log successfully created');
 }
 
 /**
